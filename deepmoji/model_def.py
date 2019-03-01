@@ -95,7 +95,7 @@ def deepmoji_transfer(nb_classes, maxlen, weight_path=None, extend_embedding=0,
 
     if weight_path is not None:
         load_specific_weights(model, weight_path,
-                              exclude_names=['softmax'],
+                              exclude_names=['fc', 'softmax'],
                               extend_embedding=extend_embedding)
     return model
 
@@ -158,6 +158,8 @@ def deepmoji_architecture(nb_classes, nb_tokens, maxlen, feature_output=False, e
             x = Dropout(final_dropout_rate)(x)
 
         if nb_classes > 2:
+            x = Dense(64, activation='relu', name='fc')(x)
+            print('FC layer added')
             outputs = [Dense(nb_classes, activation='softmax', name='softmax')(x)]
         else:
             outputs = [Dense(1, activation='sigmoid', name='softmax')(x)]

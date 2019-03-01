@@ -355,7 +355,7 @@ def finetune(model, texts, labels, nb_classes, batch_size, method,
 
     # Freeze layers if using last
     if method == 'last':
-        model = freeze_layers(model, unfrozen_keyword='softmax')
+        model = freeze_layers(model, unfrozen_keyword=['fc', 'softmax'])
 
     # Compile model, for chain-thaw we compile it later (after freezing)
     if method != 'chain-thaw':

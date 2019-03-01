@@ -1,0 +1,97 @@
+!pip install emoji==0.4.5
+!pip install h5py==2.7.0
+!pip install Keras==2.0.9
+!pip install scikit-learn==0.19.0
+!pip install text-unidecode==1.0
+
+
+from __future__ import print_function
+import example_helper
+import json
+from deepmoji.model_def import deepmoji_transfer
+from deepmoji.global_variables import PRETRAINED_PATH
+from deepmoji.finetuning import (
+    load_benchmark,
+    finetune)
+import deepmoji.create_vocab as c_vocab
+import csv
+import pickle
+
+import sagemaker
+from sagemaker import get_execution_role
+import boto3
+import json
+
+
+sess = sagemaker.Session()
+
+role = get_execution_role()
+print(role)
+
+bucket = sess.default_bucket()
+print(bucket)
+prefix = 'sagemaker/deepmoji-model'
+
+
+
+
+DATASET_PATH = '../data/merged67269.csv'
+
+sentences = []
+labels = []
+# Update Vocabulary
+
+flag = True
+
+with open(DATASET_PATH) as csvfile:
+    sen_data = csv.reader(csvfile)
+    for row in sen_data:
+        if flag:
+            flag = False
+            continue
+        
+        sentences.append(row[0])
+        labels.append({'label': int(row[1]) + 1})
+sentences = sentences[1:]
+labels = labels[1:]
+
+# randomizing data
+# validate sentences(data cleaning)
+
+# Build vocab
+data = {'texts' : sentences, 'info' : labels, 'val_ind' : 0.1, 'test_ind' : 0.2, 'train_ind' : 0.7}
+print(len(data['texts']))
+# Dump the data or modify the deepmoji load_benckmark
+
+
+# path = '../data/raw.pickle'
+# with open(path) as dataset:
+#         data = pickle.load(dataset)
+# print(data['info'])
+
+
+nb_classes = 3
+
+with open('../model/vocabulary.json', 'r') as f:
+    vocab = json.load(f)
+
+# Load dataset.
+data = load_benchmark(data, vocab, 0)
+
+
+print(len(data['texts'][2]) + len(data['texts'][0]) + len(data['texts'][1]))
+print(data.keys())
+print(data['maxlen'])
+
+
+nb_classes = 3
+
+# Set up model and finetune
+model = deepmoji_transfer(nb_classes, data['maxlen'], PRETRAINED_PATH)
+model.summary()
+model, acc = finetune(model, data['texts'], data['labels'], nb_classes,
+                      data['batch_size'], method='last')
+print('Acc: {}'.format(acc))
+
+
+
