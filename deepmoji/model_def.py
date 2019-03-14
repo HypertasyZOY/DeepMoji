@@ -158,7 +158,8 @@ def deepmoji_architecture(nb_classes, nb_tokens, maxlen, feature_output=False, e
             x = Dropout(final_dropout_rate)(x)
 
         if nb_classes > 2:
-            x = Dense(64, activation='relu', name='fc')(x)
+            x = Dense(32, activation='relu', name='fc')(x)
+            # Test: 32, 64, 96 / relu, sigmoid
             print('FC layer added')
             outputs = [Dense(nb_classes, activation='softmax', name='softmax')(x)]
         else:
